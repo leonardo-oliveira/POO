@@ -19,6 +19,7 @@ public class Jogo
 {
     private Analisador analisador;
     private Ambiente ambienteAtual;
+    private Mochila mochila;
         
     /**
      * Cria o jogo e incializa seu mapa interno.
@@ -34,23 +35,39 @@ public class Jogo
      */
     private void criarAmbientes()
     {
-        Ambiente fora, anfiteatro, cantina, laboratorio, escritorio;
+        Ambiente casa, centro, caverna, suburbio, oficina, laboratorio;
       
         // cria os ambientes
-        fora = new Ambiente("do lado de fora da entrada principal de uma universidade");
-        anfiteatro = new Ambiente("no anfiteatro");
-        cantina = new Ambiente("na cantina do campus");
-        laboratorio = new Ambiente("no laboratorio de computacao");
-        escritorio = new Ambiente("na sala de administracao dos computadores");
+        casa = new Ambiente("na sua casa");
+        centro = new Ambiente("No centro da cidade de Stormwind");
+        suburbio = new Ambiente("suburbio da cidade de Stormwind");
+        caverna = new Ambiente("na caverna mais macacra de toda Stormwind");
+        laboratorio = new Ambiente("no laboratorio");
+        oficina = new Ambiente("na oficina, onde podera ser feita sua nave");
         
         // inicializa as saidas dos ambientes
-        fora.ajustarSaidas(null, anfiteatro, laboratorio, cantina);
-        anfiteatro.ajustarSaidas(null, null, null, fora);
-        cantina.ajustarSaidas(null, fora, null, null);
-        laboratorio.ajustarSaidas(fora, escritorio, null, null);
-        escritorio.ajustarSaidas(null, null, null, laboratorio);
-
-        ambienteAtual = fora;  // o jogo comeca do lado de fora
+        Item motor = new Motor("motor", 350, "motor utilizado para a nave funcionar");
+        Item suprimento = new Suprimento ("suprimento", 10, "suprimento utilizado em sua viagem");
+        Item escape = new Escape("escape",50, "escape utilizado na nave, em sua construcao" );
+        casa.ajustarSaidas(null,centro, null, null);
+        casa.setItem(suprimento);
+        casa.setItem(suprimento);
+        casa.setItem(suprimento);
+        centro.ajustarSaidas(null, null, laboratorio, oficina);
+        centro.setItem(suprimento);
+        centro.setItem(escape);
+        suburbio.ajustarSaidas(null, null, null, caverna);
+        suburbio.setItem(suprimento);
+        suburbio.setItem(escape);
+        caverna.ajustarSaidas(null, casa, null, null);
+        caverna.setItem(suprimento);
+        laboratorio.ajustarSaidas(casa, oficina, null, null);
+        suburbio.setItem(escape);
+        suburbio.setItem(motor);
+        oficina.ajustarSaidas(null, null, suburbio, laboratorio);
+        //item presente no ambiente
+        
+        ambienteAtual = casa;  // o jogo comeca do lado de fora
     }
 
     /**
@@ -58,8 +75,8 @@ public class Jogo
      */
     public void jogar() 
     {            
+        mochila = new Mochila();
         imprimirBoasVindas();
-
         // Entra no loop de comando principal. Aqui nos repetidamente lemos
         // comandos e os executamos ate o jogo terminar.
                 
@@ -78,12 +95,30 @@ public class Jogo
     {
         System.out.println();
         System.out.println("Bem-vindo as Aventuras de Ferguson");
-        System.out.println("Filho de um comerciante local, Ferguson cresceu escutando as histórias que seu pai lhe contava sobre os seus clientes.");
-        System.out.println("Isso fez com que despertasse uma vontade de sair pelo universo e desbrava-lo, mas antes de sair ele precisava de uma nave. Então Ferguson sai 		pelo seu planeta natal coletando recursos para construir sua nave e iniciar sua jornada");
+        System.out.println("Filho de um comerciante local,");
+        System.out.println("Ferguson cresceu escutando as histórias que seu pai lhe contava sobre os seus clientes.");
+        System.out.println("Isso fez com que despertasse uma vontade de sair pelo universo e desbrava-lo, mas antes de sair ele precisava de uma nave.");
+        System.out.println("Então Ferguson sai pelo seu planeta natal coletando recursos para construir sua nave e iniciar sua jornada");        
+        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
         System.out.println("se precisar de ajuda, digite 'ajuda'");
-        
+        System.out.println("");
+        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("Para a viagem voce precisa coletar um total de : 1 motor, 2 escape e 5 suprimentos");
+        System.out.println("");
+        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
         System.out.println("Voce esta " + ambienteAtual.getDescricao());
-    
+    	System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
+    	System.out.println("Os itens atualmente em sua mochila são:");
+        mochila.listarItens();
+        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("Os itens presentes são: ");
+        ambienteAtual.listarItens();
+        System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
+
+
+
+
+    	System.out.println("");
         System.out.print("Saidas: ");
         if(ambienteAtual.saidaNorte != null) {
             System.out.print("norte ");
@@ -124,10 +159,13 @@ public class Jogo
         else if (palavraDeComando.equals("sair")) {
             querSair = sair(comando);
         }
+        if (palavraDeComando.equals("coletar")){
+        	int numero = Integer.parseInt(comando.getSegundaPalavra());
+        	mochila.adicionarItem(ambienteAtual.coletar(numero));
+        }
 
         return querSair;
     }
-
     // Implementacoes dos comandos do usuario
 
     /**
@@ -137,11 +175,11 @@ public class Jogo
      */
     private void imprimirAjuda() 
     {
-        System.out.println("Voce esta perdido. Voce esta sozinho. Voce caminha");
-        System.out.println("pela universidade.");
+        System.out.println("Voce esta em busca de peças para sua nave");
+        System.out.println("em sua cidade natal.");
         System.out.println();
         System.out.println("Suas palavras de comando sao:");
-        System.out.println("   ir sair ajuda");
+        System.out.println("   ir sair coletar ajuda");
     }
 
     /** 
@@ -178,9 +216,14 @@ public class Jogo
         }
         else {
             ambienteAtual = proximoAmbiente;
-            
+            System.out.println("os itens atualmente em sua mochila são:");
+            mochila.listarItens();
+            System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
             System.out.println("Voce esta " + ambienteAtual.getDescricao());
-            
+            System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
+            System.out.println("Os itens presentes são: ");
+            ambienteAtual.listarItens();
+            System.out.println("---------------------------------------------------------------------------------------------------------------------------------------");
             System.out.print("Saidas: ");
             if(ambienteAtual.saidaNorte != null) {
                 System.out.print("norte ");
